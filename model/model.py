@@ -1,5 +1,7 @@
+import geopy.distance
 from database.DAO import DAO
 import networkx as nx
+from model.fermata import Fermata
 
 class Model:
 
@@ -19,7 +21,7 @@ class Model:
     def buildGraphPesato(self):
         self._grafo.clear()
         self._grafo.add_nodes_from(self._fermate)
-        self.addEdgesPesati_01()
+        self.addEdgesPesatiTempi()
 
     def addEdges_01(self):
         # Aggiungere gli archi
@@ -60,6 +62,16 @@ class Model:
                                  self._idMapFermate[edge[1]],
                                  weight = edge[2])
 
+    def addEdgesPesatiTempi(self):
+        # Aggiunge archi con peso uguale al tempo di percorrenza dell'arco
+        self._grafo.clear_edges()
+        allEdges = DAO.getAllEdgesVel()
+        for edge in allEdges:
+            u = self._idMapFermate[edge[0]]
+            v = self._idMapFermate[edge[1]]
+            peso = getTraversalTime(u, v, edge[2])
+            self._grafo.add_edge(u, v, weight=peso)
+
     def getArchiPesoMaggiore(self):
         edges = self._grafo.edges(data=True)
         result = []
@@ -92,6 +104,14 @@ class Model:
         return result
     # Questo metodo genera un cammino
 
+    def getShortestPath(self, u, v):
+        return nx.single_source_dijkstra(self._grafo, u, v)
+
     @property
     def fermate(self):
         return self._fermate
+
+def getTraversalTime(u: Fermata, v: Fermata, vel):
+    distanza = geopy.distance.distance((u.coordX, u.coordY), (v.coordX, v.coordY)).km
+    tempo = distanza / (vel*60)
+    return tempo

@@ -9,12 +9,13 @@ class Controller:
         self._model = model
 
     def handleCreaGrafo(self,e):
-        self._model.buildGraph()
+        self._model.buildGraphPesato()
         self._view.lst_result.controls.clear()
         self._view.lst_result.controls.append(ft.Text("Grafo correttamente creato!"))
         self._view.lst_result.controls.append(ft.Text(f"Il grafo contiene {self._model.getNumNodi()} nodi."))
         self._view.lst_result.controls.append(ft.Text(f"Il grafo contiene {self._model.getNumArchi()} archi."))
         self._view._btnCalcola.disabled = False
+        self._view._btnCercaPercorso.disabled = False
         self._view.update_page()
 
     def handleCercaRaggiungibili(self,e):
@@ -30,6 +31,28 @@ class Controller:
         self._view.lst_result.controls.append(ft.Text(f"Di seguito, le fermate raggiungibili da {source}:"))
         for nodo in nodi:
             self._view.lst_result.controls.append(ft.Text(f"{nodo}"))
+        self._view.update_page()
+
+    def handleCercaPercorso(self, e):
+        if self._fermataPartenza is None or self._fermataArrivo is None:
+            self._view.lst_result.controls.clear()
+            self._view.lst_result.controls.clear(ft.Text("Attenzione: selezionare una fermata di partenza e una di arrivo!",
+                                                         color="red"))
+            self._view.update_page()
+            return
+        distanzaTempo, cammino = self._model.getShortestPath(self._fermataPartenza, self._fermataArrivo)
+        if cammino == []:
+            self._view.lst_result.controls.clear()
+            self._view.lst_result.controls.append(ft.Text(f"Non è stato trovato un cammino tra {self._fermataPartenza} e {self._fermataArrivo}.",
+                                                          color="red"))
+            self._view.update_page()
+            return
+        self._view.lst_result.controls.clear()
+        self._view.lst_result.controls.append(ft.Text(f"E' stato trovato un cammino tra {self._fermataPartenza} e {self._fermataArrivo}, che impiega {distanzaTempo} minuti:",
+                                                        color="green"))
+        for nodo in cammino:
+            self._view.lst_result.controls.append(ft.Text(f"{nodo}",
+                                                          color="green"))
         self._view.update_page()
 
     def loadFermate(self, dd: ft.Dropdown()):

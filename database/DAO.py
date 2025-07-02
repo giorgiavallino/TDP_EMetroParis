@@ -82,3 +82,20 @@ class DAO():
         cursor.close()
         conn.close()
         return result
+
+    @staticmethod
+    def getAllEdgesVel():
+        conn = DBConnect.get_connection()
+        result = []
+        cursor = conn.cursor(dictionary=True)
+        query = """SELECT c.id_stazP, c.id_stazA, MAX(l.velocita) AS v
+        FROM connessione c, linea l
+        WHERE c.id_linea = l.id_linea
+        GROUP BY c.id_stazP, c.id_stazA
+        ORDER BY c.id_stazP ASC, c.id_stazA ASC"""
+        cursor.execute(query, )
+        for row in cursor:
+            result.append((row["id_stazP"], row["id_stazA"], row["v"])) # --> sono tuple
+        cursor.close()
+        conn.close()
+        return result
